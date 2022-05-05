@@ -1,0 +1,246 @@
+%!TEX program = lualatex
+\documentclass[10pt,mathserif]{beamer}
+
+\usepackage{luatexja}
+\usepackage{luatexja-fontspec}
+\setmainjfont[
+    RawFeature={instance=Regular},
+    BoldFont=Noto Sans CJK SC,
+    BoldFeatures={RawFeature={instance=Bold}},
+	Renderer=Harfbuzz,
+]{Noto Sans CJK SC}
+
+\setmonofont[
+    RawFeature={instance=Regular},
+    BoldFont=Noto Sans Mono,
+    BoldFeatures={RawFeature={instance=Bold}},
+    ItalicFont=Noto Sans Mono,
+    ItalicFeatures={RawFeature={instance=Italic}},
+	Renderer=Harfbuzz,
+]{Noto Sans Mono}
+
+\newfontfamily\light{Noto Sans Mono}[
+	RawFeature={instance=ExtraLight},
+	Renderer=Harfbuzz,
+]
+
+\definecolor{xdublue}{RGB}{0,65,130}
+
+\usepackage{listings}
+\lstset{
+basicstyle=\small\ttfamily,
+keywordstyle=\color{xdublue},
+numbers=left,
+numberstyle=\tiny\light,
+commentstyle=\light,
+frame=leftline,
+tabsize=4
+}
+
+\lstdefinestyle{term}
+{basicstyle=\ttfamily, numbers=none, frame=single, breaklines=true,
+moredelim={[is][keywordstyle]{@@}{@@}}}
+
+\newcommand{\lstcode}[1] { \lstinputlisting[language=C++]{code/#1} }
+\newcommand{\lstterm}[1] { \lstinputlisting[style=term]{code/#1} }
+
+\usepackage{ulem}
+
+\usetheme[xdblue]{XDUstyle}
+
+\title{C++ Subset for Comptitive Programming}
+\institute{西安电子科技大学程序设计竞赛实训基地}
+\author{席若尧}
+\date{2022 年 5 月 3 日}
+	
+\begin{document}%
+{\xdbg \frame[plain,noframenumbering]{\titlepage}}
+
+\begin{frame}{内容}
+	\tableofcontents[hideallsubsections]
+\end{frame}
+
+\section{为什么用 C++}
+\sectionpage
+
+\begin{frame}{为什么不用 C}
+	\begin{itemize}
+		\item Q: 我只会 C，能打 ACM 吗？
+			\pause
+		\item 大佬: 能，用 C 连 Linux 内核都能写出来，还写不出几个算法题？
+			\pause
+		\item 我: 但是你能手写红黑树的 5 种插入和 7 种删除吗……
+			Linux 内核的红黑树代码 334 行。
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{为什么不用 Java}
+	\begin{itemize}
+		\item Q: 人家大公司都用 Java，我用这个东西打比赛也没问题罢？
+			\pause
+		\item 大佬: 没问题，我只会 Java 都打到 CF LGM 了。
+			\pause
+		\item 但是 Java 这个东西在用得好的人和一般人手里效率差距很大，
+			比如要用 Java 打比赛首先需要写个高效率 I/O 库，如果你直接用
+			Java 自带的 I/O 连 A+B 都能超时。
+		\item 随着 JVM 的进步，目前多数评测环境已经不再为 Java 单独开时限。
+			\pause
+		\item Kotlin 基本就是 Java 套壳，同理。
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{为什么不用 Python}
+	\begin{itemize}
+		\item Q: 学术界 Python 都能算神经网络，
+			我用这个东西打比赛也没问题罢？
+		\item 人学术界是用 Python 封装 C/C++ 写的运算库，
+			比赛时候没有运算库给你用，而且目前评测系统不支持你自己写运算库。
+		\item 只用纯 Python 的话就算你再强，写大多数题目都会超时。
+			当然有的特殊题目 (高精度，简单的字符串处理等) 是可以用的……
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{为什么不用 XXX}
+	\begin{itemize}
+		\item Pascal, Go, Rust, OCamal (@zzs), MATLAB, Brainf**k, ……
+		\item 因为 (正式) 比赛用不了
+		\item 总而言之，是因为 C++ 的语言特性和标准库提供的功能比较适合
+			这个比赛
+	\end{itemize}
+\end{frame}
+
+\section{一些 C 语言老师应该讲但是没讲/讲错的东西}
+\sectionpage
+
+\begin{frame}{误区}
+	\begin{itemize}
+		\item Q: C 是 C++ 的子集？
+			\pause
+		\item A: 并不是
+			\begin{itemize}
+				\item C++ 具有更严格的类型检查要求
+				\item \lstinline{inline} 等一些东西虽然看起来是一样的，
+					但是语义上有微妙的差别
+			\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{误区}
+	\begin{itemize}
+		\item 如果你不确定你的程序会如何表现，就跑一下试试
+			\pause
+		\item 这相当于说：如果你不确定一个化学反应是什么样的，
+			就直接在试管里试一试
+			\pause
+		\item 使用未初始化值、数组越界、带符号整数溢出等都具有不确定的行为，
+			这些在不同的机器上，使用不同的编译器或编译选项时，
+			甚至重复运行时都可能产生出乎意料的不同结果
+	\end{itemize}
+\end{frame}
+
+\section{竞赛中可能用到的 C++ 特性}
+
+\begin{frame}{一个 C 程序}
+	我们从一个 C 语言中“交换两个整数”的子程序开始：
+	\lstcode{xchg1.c}
+	\pause
+	\begin{itemize}
+		\item \lstinline{*} 和 \lstinline{&} 之类的东西很多……
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{引用类型}
+	C++ 引入了引用类型，它基本就是指针套壳：
+	\lstcode{xchg2.cc}
+	\pause
+	\begin{itemize}
+		\item 只能交换 \lstinline{int}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{函数重载}
+	重载允许我们编写同名，但参数类型不同的子程序：
+	\lstcode{xchg3.cc}
+\end{frame}
+
+\begin{frame}{例：绝对值函数}
+	\lstcode{abs.cc}
+	输出为：
+	\lstterm{abs.out}
+\end{frame}
+
+\begin{frame}{函数模板}
+	模板使得编译器为多种类型自动生成重载函数：
+	\lstcode{xchg4.cc}
+\end{frame}
+
+\begin{frame}{命名空间}
+	命名空间可以用于防止名称冲突：
+	\lstcode{namespace.cc}
+\end{frame}
+
+\begin{frame}{std 命名空间}
+	C++ 标准库中的所有名称都位于 \lstinline{std} 命名空间中，
+	所以很多竞赛程序都会直接导入其中的所有名称以便使用：
+	\lstcode{using-std.cc}
+	但是这在写软件项目时通常是不允许的，也有一些竞赛选手不喜欢这样做。
+\end{frame}
+
+\begin{frame}{标准库的排序函数}
+	\lstcode{sort.cc}
+	输出为：
+	\lstterm{sort.out}
+	如无特殊需要，比赛时不要写任何排序算法！
+\end{frame}
+
+\begin{frame}{二分查找函数}
+	\lstcode{bsrch.cc}
+	输出为：
+	\lstterm{bsrch.out}
+	区间 $[l, r)$ 包含了所有的 $4$。
+\end{frame}
+
+\begin{frame}{重载运算符}
+	\lstcode{sort-vec.cc}
+\end{frame}
+
+\begin{frame}{重载运算符}
+	输出为：
+	\lstterm{sort-vec.out}
+\end{frame}
+
+\begin{frame}{set}
+	\lstinline{std::set} 是一种基于有序数据结构的 (具体来说是二叉搜索树)
+	集合类型。
+	\lstcode{set.cc}
+	\lstterm{set.out}
+\end{frame}
+
+\begin{frame}{动态插入和删除}
+	\lstcode{set2.cc}
+	\lstterm{set2.out}
+\end{frame}
+
+\begin{frame}{二分查找}
+	\lstcode{set3.cc}
+	\lstterm{set3.out}
+\end{frame}
+
+\begin{frame}{multiset}
+	和 \lstinline{set} 类似，但是允许重复元素：
+	\lstcode{multiset.cc}
+	\lstterm{multiset.out}
+\end{frame}
+
+\begin{frame}{map}
+	除了集合以外，还维护该集合上的一个映射：
+	\lstcode{map.cc}
+	\lstterm{map.out}
+\end{frame}
+
+{\xdbg%末页致谢
+\begin{frame}[plain,noframenumbering]
+ \finalpage{{\huge GL and HF!}}
+\end{frame}}
+
+\end{document}

@@ -1,0 +1,8 @@
+*.gcda
+*.gcno
+*.gcov
+*.out
+*.s
+*.exe
+*.in
+*.o
